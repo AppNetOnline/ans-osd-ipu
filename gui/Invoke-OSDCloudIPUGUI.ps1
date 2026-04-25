@@ -160,9 +160,10 @@ $Window.Add_SizeChanged({
 # ─────────────────────────────────────────────────────────────────────────────
 #  SHARED STATE
 # ─────────────────────────────────────────────────────────────────────────────
-$script:MessageQueue    = [System.Collections.Concurrent.ConcurrentQueue[hashtable]]::new()
-$script:IsRunning       = $False
+$script:MessageQueue      = [System.Collections.Concurrent.ConcurrentQueue[hashtable]]::new()
+$script:IsRunning         = $False
 $script:SectionParseState = 0   # 0=normal  1=saw-separator  2=saw-timestamp
+$script:PendingConfig     = $null
 
 $script:ProgressMap = [ordered]@{
     'starting invoke-osdcloudipu'       = @(2,  'Starting IPU engine...')
