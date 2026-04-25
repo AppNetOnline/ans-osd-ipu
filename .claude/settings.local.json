@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -NoProfile -Command ' *)",
+      "Bash(powershell -NoProfile -Command 'try { [xml]\\(Get-Content '\\\\''f:/ans-osd-ipu/gui/OSDCloudIPUGUI.xaml'\\\\'' -Raw\\); '\\\\''XAML: valid'\\\\'' } catch { '\\\\''ERROR: '\\\\'' + $_.Exception.Message }')"
+    ]
+  }
+}
