@@ -1,3 +1,5 @@
 secrets.json
 *.clixml
 *.log
+schema.sql
+secrets.example.json

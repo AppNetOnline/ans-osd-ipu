@@ -1,20 +1,20 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     ANS IPU deployment runspace script.
 .DESCRIPTION
     Runs inside an isolated PowerShell runspace launched by Invoke-OSDCloudIPUGUI.ps1.
     Variables injected by the parent before this script runs:
-        $Config       — hashtable of IPU options (OSName, Silent, NoReboot, etc.)
-        $MessageQueue — ConcurrentQueue[hashtable] shared with the UI thread
-        $GithubBase   — raw GitHub base URL for this repo
+        $Config       - hashtable of IPU options (OSName, Silent, NoReboot, etc.)
+        $MessageQueue - ConcurrentQueue[hashtable] shared with the UI thread
+        $GithubBase   - raw GitHub base URL for this repo
     Do not run this script directly.
 .NOTES
-    Author  : Appalachian Network Services — appnetonline.com
+    Author  : Appalachian Network Services - appnetonline.com
     Flow    :
-        Phase 1 — Invoke-OSDCloudIPU in child process:
+        Phase 1 - Invoke-OSDCloudIPU in child process:
                     transcript tail + BITS polling for ESD and driver pack downloads
-        Phase 2 — Windows Setup running:
+        Phase 2 - Windows Setup running:
                     polls HKLM:\System\Setup\mosetup\volatile\SetupProgress (0-100)
                     and maps to progress bar 87-99%
 #>
@@ -49,31 +49,34 @@ $script:StartTime = Get-Date
 
 Function Initialize-Monitor {
     try {
-        $modulePath    = Join-Path $env:TEMP 'GitHubDB.psm1'
-        $moduleContent = Invoke-RestMethod "$GithubBase/shared/GitHubDB.psm1" -UseBasicParsing -ErrorAction Stop
+        # Load SupabaseDB module from GitHub
+        $modulePath    = Join-Path $env:TEMP 'SupabaseDB.psm1'
+        $moduleContent = Invoke-RestMethod "$GithubBase/shared/SupabaseDB.psm1" -UseBasicParsing -ErrorAction Stop
         Set-Content -Path $modulePath -Value $moduleContent -Encoding UTF8
         Import-Module $modulePath -Force -Global -WarningAction SilentlyContinue -ErrorAction Stop
 
+        # Find secrets.json on any drive under the OSDCloud config path
         $secretsFile = Get-PSDrive -PSProvider FileSystem -ErrorAction SilentlyContinue |
             ForEach-Object { Join-Path $_.Root 'OSDCloud\Config\Scripts\SetupComplete\secrets.json' } |
             Where-Object   { Test-Path $_ -ErrorAction SilentlyContinue } |
             Select-Object  -First 1
 
-        If (-not $secretsFile) { Enqueue 'Monitoring: secrets.json not found — skipping'; Return $false }
+        If (-not $secretsFile) { Enqueue 'Monitoring: secrets.json not found - skipping'; Return $false }
 
         $sec = Get-Content $secretsFile -Raw | ConvertFrom-Json
-        If (-not $sec.GitHubDBToken) { Enqueue 'Monitoring: GitHubDBToken missing — skipping'; Return $false }
+
+        If (-not $sec.SupabaseUrl -or -not $sec.SupabaseKey) {
+            Enqueue 'Monitoring: SupabaseUrl / SupabaseKey missing from secrets.json - skipping'
+            Return $false
+        }
 
         $script:DBConn = @{
-            Owner  = 'AppNetOnline'
-            Repo   = 'deployment-db'
-            Path   = 'data/deployments.json'
-            Token  = $sec.GitHubDBToken
-            Branch = 'main'
+            Url = $sec.SupabaseUrl.TrimEnd('/')
+            Key = $sec.SupabaseKey
         }
         Return $true
     }
-    catch { Enqueue "Monitoring: init failed ($($_.Exception.Message)) — skipping"; Return $false }
+    catch { Enqueue "Monitoring: init failed ($($_.Exception.Message)) - skipping"; Return $false }
 }
 
 Function Get-HardwareInfo {
@@ -128,18 +131,40 @@ Function New-IPURecord {
     If (-not $script:DBConn) { Return }
     try {
         $row = @{
-            Status          = 'Running'
-            Type            = 'IPU'
-            StartTime       = $script:StartTime.ToString('o')
-            EndTime         = $null
-            DurationMinutes = $null
-            ErrorMessage    = $null
-            OSTarget        = $OSTarget
-            OSDCloudVersion = $OSDVersion
+            status           = 'Running'
+            started_at       = $script:StartTime.ToString('o')
+            os_target        = $OSTarget
+            osd_version      = $OSDVersion
+            # Hardware
+            hostname         = $HW.Hostname
+            manufacturer     = $HW.Manufacturer
+            model            = $HW.Model
+            serial_number    = $HW.SerialNumber
+            uuid             = $HW.UUID
+            cpu              = $HW.CPU
+            cpu_cores        = $HW.CPUCores
+            cpu_logical_procs = $HW.CPULogicalProcs
+            cpu_speed_mhz    = $HW.CPUSpeedMHz
+            ram_gb           = $HW.RAMGb
+            disk_gb          = $HW.DiskGB
+            bios_version     = $HW.BIOSVersion
+            bios_date        = $HW.BIOSDate
+            mac_addresses    = $HW.MACAddresses
+            # Config flags
+            silent           = [bool]$Config.Silent
+            no_reboot        = [bool]$Config.NoReboot
+            skip_driver_pack = [bool]$Config.SkipDriverPack
+            download_only    = [bool]$Config.DownloadOnly
+            dynamic_update   = [bool]$Config.DynamicUpdate
+            # Geo
+            public_ip        = $Geo.PublicIP
+            isp              = $Geo.ISP
+            city             = $Geo.City
+            region           = $Geo.Region
+            country          = $Geo.Country
+            timezone         = $Geo.Timezone
         }
-        ForEach ($k in $HW.Keys) { $row[$k] = $HW[$k] }
-        ForEach ($k in $Geo.Keys) { $row[$k] = $Geo[$k] }
-        $added          = Add-GHDBRow -Connection $script:DBConn -Row $row
+        $added          = New-SupabaseRecord -Connection $script:DBConn -Row $row
         $script:DBRowId = $added.id
         Enqueue "Monitoring: record created (id=$($script:DBRowId))"
     }
@@ -150,10 +175,10 @@ Function Complete-IPURecord {
     If (-not $script:DBConn -or -not $script:DBRowId) { Return }
     try {
         $end = Get-Date
-        Update-GHDBRow -Connection $script:DBConn -Id $script:DBRowId -Updates @{
-            Status          = 'Complete'
-            EndTime         = $end.ToString('o')
-            DurationMinutes = [math]::Round(($end - $script:StartTime).TotalMinutes, 1)
+        Update-SupabaseRecord -Connection $script:DBConn -Id $script:DBRowId -Updates @{
+            status           = 'Complete'
+            completed_at     = $end.ToString('o')
+            duration_minutes = [math]::Round(($end - $script:StartTime).TotalMinutes, 1)
         }
     }
     catch {}
@@ -164,11 +189,11 @@ Function Fail-IPURecord {
     If (-not $script:DBConn -or -not $script:DBRowId) { Return }
     try {
         $end = Get-Date
-        Update-GHDBRow -Connection $script:DBConn -Id $script:DBRowId -Updates @{
-            Status          = 'Error'
-            EndTime         = $end.ToString('o')
-            DurationMinutes = [math]::Round(($end - $script:StartTime).TotalMinutes, 1)
-            ErrorMessage    = $ErrorMessage
+        Update-SupabaseRecord -Connection $script:DBConn -Id $script:DBRowId -Updates @{
+            status           = 'Error'
+            completed_at     = $end.ToString('o')
+            duration_minutes = [math]::Round(($end - $script:StartTime).TotalMinutes, 1)
+            error_message    = $ErrorMessage
         }
     }
     catch {}
@@ -198,7 +223,7 @@ try {
     $HW  = Get-HardwareInfo
     $Geo = Get-GeoInfo
 
-    Enqueue "Hardware : $($HW.Manufacturer) $($HW.Model) — S/N $($HW.SerialNumber)"
+    Enqueue "Hardware : $($HW.Manufacturer) $($HW.Model) - S/N $($HW.SerialNumber)"
     Enqueue "CPU      : $($HW.CPU) ($($HW.CPUCores)C/$($HW.CPULogicalProcs)T)"
     Enqueue "RAM      : $($HW.RAMGb) GB    Disk: $($HW.DiskGB) GB"
     Enqueue "Location : $($Geo.City), $($Geo.Region) ($($Geo.PublicIP))"
@@ -354,7 +379,7 @@ Finally {
     # ── Phase 2: monitor Windows Setup via registry ───────────────────────────
     If (-not $Config.DownloadOnly) {
         Enqueue ''
-        Enqueue 'Windows Setup launched — monitoring progress via registry...'
+        Enqueue 'Windows Setup launched - monitoring progress via registry...'
         Enqueue 'The machine will restart automatically when the down-level phase completes.'
         Enqueue ''
 

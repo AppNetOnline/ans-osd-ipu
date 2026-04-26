@@ -56,7 +56,7 @@ $IPUConfig = @{
 #  GITHUB — base URLs for companion files
 # ─────────────────────────────────────────────────────────────────────────────
 $GithubBase = 'https://raw.githubusercontent.com/AppNetOnline/ans-osd-ipu/main'
-$GithubRaw  = "$GithubBase/gui"
+$GithubRaw = "$GithubBase/gui"
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  ASSEMBLIES
@@ -70,13 +70,14 @@ Add-Type -AssemblyName System.Windows.Forms
 #  BOOTSTRAP — fetch (or load locally in TestMode) XAML and runspace script
 # ─────────────────────────────────────────────────────────────────────────────
 if ($TestMode) {
-    $localXaml   = Join-Path $PSScriptRoot 'OSDCloudIPUGUI.xaml'
+    $localXaml = Join-Path $PSScriptRoot 'OSDCloudIPUGUI.xaml'
     $localDeploy = Join-Path $PSScriptRoot 'Invoke-OSDCloudIPUDeploy.ps1'
     try {
         [xml]$XAML = Get-Content $localXaml -Raw -ErrorAction Stop
         $script:DeployScriptContent = if (Test-Path $localDeploy) {
             Get-Content $localDeploy -Raw
-        } else { '# TestMode placeholder' }
+        }
+        else { '# TestMode placeholder' }
     }
     catch {
         Write-Host "TestMode bootstrap failed: $($_.Exception.Message)" -ForegroundColor Red
@@ -86,8 +87,8 @@ if ($TestMode) {
 }
 else {
     try {
-        [xml]$XAML                   = Invoke-RestMethod "$GithubRaw/OSDCloudIPUGUI.xaml"            -UseBasicParsing
-        $script:DeployScriptContent  = Invoke-RestMethod "$GithubRaw/Invoke-OSDCloudIPUDeploy.ps1"   -UseBasicParsing
+        [xml]$XAML = Invoke-RestMethod "$GithubRaw/OSDCloudIPUGUI.xaml"            -UseBasicParsing
+        $script:DeployScriptContent = Invoke-RestMethod "$GithubRaw/Invoke-OSDCloudIPUDeploy.ps1"   -UseBasicParsing
     }
     catch {
         Write-Host "Bootstrap failed: $($_.Exception.Message)" -ForegroundColor Red
@@ -113,64 +114,64 @@ catch {
 Function Get-Control { Param($Name) $Window.FindName($Name) }
 
 # ── Core display controls
-$RtbLog         = Get-Control 'RtbLog'
-$LogScroller    = Get-Control 'LogScroller'
-$StatusDot      = Get-Control 'StatusDot'
+$RtbLog = Get-Control 'RtbLog'
+$LogScroller = Get-Control 'LogScroller'
+$StatusDot = Get-Control 'StatusDot'
 $TxtStatusLabel = Get-Control 'TxtStatusLabel'
-$TxtProgress    = Get-Control 'TxtProgress'
-$TxtPercent     = Get-Control 'TxtPercent'
-$ProgressFill   = Get-Control 'ProgressFill'
-$TxtClock       = Get-Control 'TxtClock'
+$TxtProgress = Get-Control 'TxtProgress'
+$TxtPercent = Get-Control 'TxtPercent'
+$ProgressFill = Get-Control 'ProgressFill'
+$TxtClock = Get-Control 'TxtClock'
 
 # ── Header buttons
-$BtnMinimize    = Get-Control 'BtnMinimize'
-$BtnClose       = Get-Control 'BtnClose'
+$BtnMinimize = Get-Control 'BtnMinimize'
+$BtnClose = Get-Control 'BtnClose'
 
 # ── Progress-footer buttons
-$BtnRepair      = Get-Control 'BtnRepair'
-$BtnCancel      = Get-Control 'BtnCancel'
+$BtnRepair = Get-Control 'BtnRepair'
+$BtnCancel = Get-Control 'BtnCancel'
 
 # ── Config overlay controls
-$ConfigOverlay      = Get-Control 'ConfigOverlay'
-$CboOSName          = Get-Control 'CboOSName'
-$ChkSilent          = Get-Control 'ChkSilent'
-$ChkNoReboot        = Get-Control 'ChkNoReboot'
-$ChkSkipDriverPack  = Get-Control 'ChkSkipDriverPack'
-$ChkDownloadOnly    = Get-Control 'ChkDownloadOnly'
-$ChkDynamicUpdate   = Get-Control 'ChkDynamicUpdate'
-$BtnStartUpgrade    = Get-Control 'BtnStartUpgrade'
-$BtnRepairOverlay   = Get-Control 'BtnRepairOverlay'
-$BtnCancelOverlay   = Get-Control 'BtnCancelOverlay'
+$ConfigOverlay = Get-Control 'ConfigOverlay'
+$CboOSName = Get-Control 'CboOSName'
+$ChkSilent = Get-Control 'ChkSilent'
+$ChkNoReboot = Get-Control 'ChkNoReboot'
+$ChkSkipDriverPack = Get-Control 'ChkSkipDriverPack'
+$ChkDownloadOnly = Get-Control 'ChkDownloadOnly'
+$ChkDynamicUpdate = Get-Control 'ChkDynamicUpdate'
+$BtnStartUpgrade = Get-Control 'BtnStartUpgrade'
+$BtnRepairOverlay = Get-Control 'BtnRepairOverlay'
+$BtnCancelOverlay = Get-Control 'BtnCancelOverlay'
 
 # Size the window: 70% of work area width, 75% of height, centered
-$workArea      = [System.Windows.SystemParameters]::WorkArea
-$Window.Width  = [Math]::Round($workArea.Width  * 0.70)
+$workArea = [System.Windows.SystemParameters]::WorkArea
+$Window.Width = [Math]::Round($workArea.Width * 0.70)
 $Window.Height = [Math]::Round($workArea.Height * 0.75)
-$Window.Left   = $workArea.Left + [Math]::Round(($workArea.Width  - $Window.Width)  / 2)
-$Window.Top    = $workArea.Top  + [Math]::Round(($workArea.Height - $Window.Height) / 2)
+$Window.Left = $workArea.Left + [Math]::Round(($workArea.Width - $Window.Width) / 2)
+$Window.Top = $workArea.Top + [Math]::Round(($workArea.Height - $Window.Height) / 2)
 
 # Fix RichTextBox PageWidth — prevents single-character-per-line rendering in .NET Framework
-$RtbLog.Document.PageWidth        = 2000
-$RtbLog.Document.LineHeight       = [Double]::NaN
+$RtbLog.Document.PageWidth = 2000
+$RtbLog.Document.LineHeight = [Double]::NaN
 $RtbLog.HorizontalContentAlignment = 'Stretch'
 $Window.Add_SizeChanged({
-    $RtbLog.Document.PageWidth = [Math]::Max($LogScroller.ActualWidth - 48, 400)
-})
+        $RtbLog.Document.PageWidth = [Math]::Max($LogScroller.ActualWidth - 48, 400)
+    })
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  SHARED STATE
 # ─────────────────────────────────────────────────────────────────────────────
-$script:MessageQueue      = [System.Collections.Concurrent.ConcurrentQueue[hashtable]]::new()
-$script:IsRunning         = $False
+$script:MessageQueue = [System.Collections.Concurrent.ConcurrentQueue[hashtable]]::new()
+$script:IsRunning = $False
 $script:SectionParseState = 0   # 0=normal  1=saw-separator  2=saw-timestamp
-$script:PendingConfig     = $null
+$script:PendingConfig = $null
 
 $script:ProgressMap = [ordered]@{
-    'starting invoke-osdcloudipu'       = @(2,  'Starting IPU engine...')
-    'looking of details'                = @(3,  'Gathering device info...')
-    'device is windows 11 capable'      = @(5,  'Win11 readiness: CAPABLE')
-    'device is !not! windows 11'        = @(5,  'Win11 readiness: NOT CAPABLE')
-    'starting feature update lookup'    = @(8,  'Looking up feature update...')
+    'starting invoke-osdcloudipu'       = @(2, 'Starting IPU engine...')
+    'looking of details'                = @(3, 'Gathering device info...')
+    'device is windows 11 capable'      = @(5, 'Win11 readiness: CAPABLE')
+    'device is !not! windows 11'        = @(5, 'Win11 readiness: NOT CAPABLE')
+    'starting feature update lookup'    = @(8, 'Looking up feature update...')
     'getting content for upgrade media' = @(10, 'Preparing upgrade media...')
     'sha1 match on'                     = @(50, 'ESD verified, skipping download...')
     'starting download to'              = @(12, 'Downloading ESD...')
@@ -208,7 +209,7 @@ Function Write-LogDivider {
 
 Function Set-Status {
     Param([string]$Label, [string]$DotColor, [string]$TextColor)
-    $StatusDot.Fill      = [System.Windows.Media.SolidColorBrush][System.Windows.Media.ColorConverter]::ConvertFromString($DotColor)
+    $StatusDot.Fill = [System.Windows.Media.SolidColorBrush][System.Windows.Media.ColorConverter]::ConvertFromString($DotColor)
     $TxtStatusLabel.Text = $Label
     $TxtStatusLabel.Foreground = [System.Windows.Media.SolidColorBrush][System.Windows.Media.ColorConverter]::ConvertFromString($TextColor)
 }
@@ -216,7 +217,7 @@ Function Set-Status {
 Function Update-Progress {
     Param([int]$Pct, [string]$Label)
     $TxtProgress.Text = $Label
-    $TxtPercent.Text  = "$Pct%"
+    $TxtPercent.Text = "$Pct%"
     $parent = $ProgressFill.Parent
     If ($parent -and $parent.ActualWidth -gt 0) {
         $ProgressFill.Width = [Math]::Round($parent.ActualWidth * ($Pct / 100), 1)
@@ -227,7 +228,7 @@ Function Update-Progress {
 
 Function Get-LineStyle {
     Param([string]$Line)
-    $t  = $Line.TrimStart()
+    $t = $Line.TrimStart()
     $tl = $t.ToLower()
 
     If ($t -match '^\*{10,}') { Return @{ Skip = $True } }
@@ -236,11 +237,11 @@ Function Get-LineStyle {
     }
     If ($t -match '^VERBOSE:') { Return @{ Skip = $True } }
 
-    If ($t -match '^\[i\] ')          { Return @{ Color = '#5B9BD5'; Bold = $False } }
+    If ($t -match '^\[i\] ') { Return @{ Color = '#5B9BD5'; Bold = $False } }
     If ($tl -match '\b(error|fail|exception|critical)\b') { Return @{ Color = '#E50019'; Bold = $False } }
     If ($t -match '^WARNING:' -or $tl -match '\bwarn') { Return @{ Color = '#C8820A'; Bold = $False } }
     If ($tl -match '\b(success|complete|done|finished|completed in)\b') { Return @{ Color = '#3A9B50'; Bold = $True } }
-    If ($t -match '^https?://')        { Return @{ Color = '#4A8FA8'; Bold = $False } }
+    If ($t -match '^https?://') { Return @{ Color = '#4A8FA8'; Bold = $False } }
     If ($t -match '^[\w][\w\s]{1,30}\s{1,}: ') { Return @{ Color = '#8B8B8B'; Bold = $False } }
     If ($t -match '^[-\s]+$' -and $t.Length -gt 4 -and $t -match '-{3,}') {
         Return @{ Color = '#3A3A3A'; Bold = $False }
@@ -265,66 +266,74 @@ Function Get-ProgressHint {
 # ─────────────────────────────────────────────────────────────────────────────
 #  DISPATCHER TIMER — drains message queue onto UI thread every 80 ms
 # ─────────────────────────────────────────────────────────────────────────────
-$DispatchTimer          = [System.Windows.Threading.DispatcherTimer]::new()
+$DispatchTimer = [System.Windows.Threading.DispatcherTimer]::new()
 $DispatchTimer.Interval = [TimeSpan]::FromMilliseconds(80)
 $DispatchTimer.Add_Tick({
-    $TxtClock.Text = (Get-Date).ToString('HH:mm:ss')
-    $msg = [hashtable]$Null
-    $n   = 0
-    while ($script:MessageQueue.TryDequeue([ref]$msg) -and $n -lt 30) {
-        $n++
-        $ts = (Get-Date).ToString('HH:mm:ss')
-        switch ($msg.Type) {
-            'line' {
-                $text = $msg.Text
-                If ($text -match '^={10,}') {
-                    $script:SectionParseState = 1
-                }
-                ElseIf ($script:SectionParseState -eq 1) {
-                    If ($text.Trim() -eq '') { }
-                    ElseIf ($text -match '^\[\d{1,2}/\d{1,2}/\d{4}') {
-                        $script:SectionParseState = 2
+        $TxtClock.Text = (Get-Date).ToString('HH:mm:ss')
+        $msg = [hashtable]$Null
+        $n = 0
+        while ($script:MessageQueue.TryDequeue([ref]$msg) -and $n -lt 30) {
+            $n++
+            $ts = (Get-Date).ToString('HH:mm:ss')
+            switch ($msg.Type) {
+                'line' {
+                    $text = $msg.Text
+                    If ($text -match '^={10,}') {
+                        $script:SectionParseState = 1
+                    }
+                    ElseIf ($script:SectionParseState -eq 1) {
+                        If ($text.Trim() -eq '') { }
+                        ElseIf ($text -match '^\[\d{1,2}/\d{1,2}/\d{4}') {
+                            $script:SectionParseState = 2
+                        }
+                        Else {
+                            $script:SectionParseState = 0
+                            $style = Get-LineStyle $text
+                            If (-not $style.Skip) { Write-LogLine "[$ts]  $text" $style.Color ($style.Bold -eq $True) }
+                            $hint = Get-ProgressHint $text; If ($hint) { Update-Progress $hint[0] $hint[1] }
+                        }
+                    }
+                    ElseIf ($script:SectionParseState -eq 2) {
+                        If ($text.Trim() -eq '') { }
+                        Else {
+                            $script:SectionParseState = 0
+                            Write-LogDivider $text.Trim() '#5B9BD5'
+                            $hint = Get-ProgressHint $text; If ($hint) { Update-Progress $hint[0] $hint[1] }
+                        }
                     }
                     Else {
-                        $script:SectionParseState = 0
                         $style = Get-LineStyle $text
                         If (-not $style.Skip) { Write-LogLine "[$ts]  $text" $style.Color ($style.Bold -eq $True) }
                         $hint = Get-ProgressHint $text; If ($hint) { Update-Progress $hint[0] $hint[1] }
                     }
                 }
-                ElseIf ($script:SectionParseState -eq 2) {
-                    If ($text.Trim() -eq '') { }
-                    Else {
-                        $script:SectionParseState = 0
-                        Write-LogDivider $text.Trim() '#5B9BD5'
-                        $hint = Get-ProgressHint $text; If ($hint) { Update-Progress $hint[0] $hint[1] }
-                    }
+                'warning' { Write-LogLine "[$ts]  $($msg.Text)" '#C8820A' $False }
+                'progress' { Update-Progress $msg.Percent $msg.Label }
+                'modules_ready' {
+                    # Setup runspace finished — close it and launch the upgrade
+                    try { $script:SetupPipeline.Stop() } catch {}
+                    try { $script:SetupRunspace.Close() } catch {}
+                    Write-LogDivider 'Modules verified — starting upgrade' '#3A9B50'
+                    Set-Status 'Upgrading' '#E50019' '#E50019'
+                    Start-IPURunspace -Config $script:PendingConfig
                 }
-                Else {
-                    $style = Get-LineStyle $text
-                    If (-not $style.Skip) { Write-LogLine "[$ts]  $text" $style.Color ($style.Bold -eq $True) }
-                    $hint = Get-ProgressHint $text; If ($hint) { Update-Progress $hint[0] $hint[1] }
+                'error' {
+                    Write-LogLine "[$ts]  ERROR: $($msg.Text)" '#E50019' $True
+                    Set-Status 'Error' '#E50019' '#E50019'
+                    $script:IsRunning = $False
+                    $BtnRepair.IsEnabled = $True
+                    $BtnCancel.Content = 'Close'
                 }
-            }
-            'warning'  { Write-LogLine "[$ts]  $($msg.Text)" '#C8820A' $False }
-            'progress' { Update-Progress $msg.Percent $msg.Label }
-            'error' {
-                Write-LogLine "[$ts]  ERROR: $($msg.Text)" '#E50019' $True
-                Set-Status 'Error' '#E50019' '#E50019'
-                $script:IsRunning = $False
-                $BtnRepair.IsEnabled = $True
-                $BtnCancel.Content   = 'Close'
-            }
-            'complete' {
-                Write-LogDivider 'Upgrade Phase Complete — machine will restart' '#3A9B50'
-                Update-Progress 100 'Upgrade complete!'
-                Set-Status 'Complete' '#3A9B50' '#3A9B50'
-                $script:IsRunning  = $False
-                $BtnCancel.Content = 'Close'
+                'complete' {
+                    Write-LogDivider 'Upgrade Phase Complete — machine will restart' '#3A9B50'
+                    Update-Progress 100 'Upgrade complete!'
+                    Set-Status 'Complete' '#3A9B50' '#3A9B50'
+                    $script:IsRunning = $False
+                    $BtnCancel.Content = 'Close'
+                }
             }
         }
-    }
-})
+    })
 $DispatchTimer.Start()
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -336,12 +345,12 @@ Function Start-IPURunspace {
     $script:IsRunning = $True
 
     $rs = [System.Management.Automation.Runspaces.RunspaceFactory]::CreateRunspace()
-    $rs.ApartmentState  = 'STA'
-    $rs.ThreadOptions   = 'ReuseThread'
+    $rs.ApartmentState = 'STA'
+    $rs.ThreadOptions = 'ReuseThread'
     $rs.Open()
-    $rs.SessionStateProxy.SetVariable('Config',       $Config)
+    $rs.SessionStateProxy.SetVariable('Config', $Config)
     $rs.SessionStateProxy.SetVariable('MessageQueue', $script:MessageQueue)
-    $rs.SessionStateProxy.SetVariable('GithubBase',   $GithubBase)
+    $rs.SessionStateProxy.SetVariable('GithubBase', $GithubBase)
 
     $ps = [System.Management.Automation.PowerShell]::Create()
     $ps.Runspace = $rs
@@ -349,6 +358,114 @@ Function Start-IPURunspace {
 
     $script:IPURunspace = $rs
     $script:IPUPipeline = $ps
+    $null = $ps.BeginInvoke()
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  SETUP RUNSPACE — checks and installs required modules before upgrade starts
+# ─────────────────────────────────────────────────────────────────────────────
+Function Start-SetupRunspace {
+    Param([hashtable]$Config)
+
+    $script:PendingConfig = $Config
+    $script:IsRunning = $True
+
+    $rs = [System.Management.Automation.Runspaces.RunspaceFactory]::CreateRunspace()
+    $rs.ApartmentState = 'STA'
+    $rs.ThreadOptions = 'ReuseThread'
+    $rs.Open()
+    $rs.SessionStateProxy.SetVariable('MessageQueue', $script:MessageQueue)
+
+    $ps = [System.Management.Automation.PowerShell]::Create()
+    $ps.Runspace = $rs
+
+    $null = $ps.AddScript({
+            $ErrorActionPreference = 'SilentlyContinue'
+
+            Function Post {
+                Param([string]$Text, [string]$Type = 'line')
+                $MessageQueue.Enqueue(@{ Type = $Type; Text = $Text })
+            }
+
+            # ── Admin check
+            $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
+                [Security.Principal.WindowsBuiltInRole]::Administrator)
+            if (-not $isAdmin) {
+                Post '  WARNING: Not running as Administrator — module installation may fail.' 'warning'
+                Post '  Re-launch as Administrator if the OSD module is not already installed.' 'warning'
+                Post ''
+            }
+
+            Post '  Checking required modules...'
+            Post ''
+
+            # ── NuGet package provider
+            try {
+                $prov = Get-PackageProvider -Name NuGet -ListAvailable -ErrorAction SilentlyContinue |
+                Sort-Object Version -Descending | Select-Object -First 1
+                if ($prov -and $prov.Version -ge [version]'2.8.5.201') {
+                    Post "  NuGet provider : v$($prov.Version)  OK"
+                }
+                else {
+                    Post '  NuGet provider : not found — installing...'
+                    $null = Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope AllUsers -ErrorAction Stop
+                    Post '  NuGet provider : installed.'
+                }
+            }
+            catch {
+                Post "  NuGet provider : install failed — $_" 'warning'
+            }
+
+            # ── PSGallery trust
+            try {
+                $repo = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
+                if ($repo -and $repo.InstallationPolicy -ne 'Trusted') {
+                    Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
+                    Post '  PSGallery      : set to Trusted.'
+                }
+                else {
+                    Post '  PSGallery      : Trusted  OK'
+                }
+            }
+            catch {
+                Post "  PSGallery      : trust check failed — $_" 'warning'
+            }
+
+            # ── OSD module
+            try {
+                $osd = Get-Module -ListAvailable -Name OSD |
+                Sort-Object Version -Descending | Select-Object -First 1
+
+                if ($osd) {
+                    Post "  OSD module     : v$($osd.Version)  OK"
+                    Post ''
+                    $MessageQueue.Enqueue(@{ Type = 'modules_ready' })
+                }
+                else {
+                    Post '  OSD module     : not found — installing from PSGallery...'
+                    Post '  This may take a minute, please wait.' 'warning'
+                    Install-Module -Name OSD -Force -AllowClobber -Scope AllUsers -ErrorAction Stop
+                    $osd = Get-Module -ListAvailable -Name OSD |
+                    Sort-Object Version -Descending | Select-Object -First 1
+                    if ($osd) {
+                        Post "  OSD module     : v$($osd.Version) installed successfully."
+                        Post ''
+                        $MessageQueue.Enqueue(@{ Type = 'modules_ready' })
+                    }
+                    else {
+                        $MessageQueue.Enqueue(@{ Type = 'error'
+                                Text                  = 'OSD module installation completed but module was not detected. Check PSGallery connectivity and retry.' 
+                            })
+                    }
+                }
+            }
+            catch {
+                $MessageQueue.Enqueue(@{ Type = 'error'; Text = "Module setup failed: $_" })
+            }
+        })
+
+    $script:SetupRunspace = $rs
+    $script:SetupPipeline = $ps
     $null = $ps.BeginInvoke()
 }
 
@@ -387,7 +504,7 @@ Function Invoke-Repair {
             [System.Windows.MessageBoxImage]::Error
         ) | Out-Null
     }
-}
+};
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  CLOSE HELPER — optionally confirms when upgrade is running
@@ -403,7 +520,7 @@ Function Request-Close {
         if ($ans -ne [System.Windows.MessageBoxResult]::Yes) { return }
     }
     $Window.Close()
-}
+};
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  WINDOW EVENTS
@@ -419,76 +536,70 @@ $BtnCancelOverlay.Add_Click({ $Window.Close() })
 
 # ── Start Upgrade — reads controls, collapses overlay, launches runspace
 $BtnStartUpgrade.Add_Click({
-    # Read selections from UI
-    $selectedOS = if ($CboOSName.SelectedItem) {
-        $CboOSName.SelectedItem.Content
-    } else { $IPUConfig.OSName }
+        # Read selections from UI
+        $selectedOS = if ($CboOSName.SelectedItem) {
+            $CboOSName.SelectedItem.Content
+        }
+        else { $IPUConfig.OSName }
 
-    $IPUConfig.OSName         = $selectedOS
-    $IPUConfig.Silent         = [bool]$ChkSilent.IsChecked
-    $IPUConfig.NoReboot       = [bool]$ChkNoReboot.IsChecked
-    $IPUConfig.SkipDriverPack = [bool]$ChkSkipDriverPack.IsChecked
-    $IPUConfig.DownloadOnly   = [bool]$ChkDownloadOnly.IsChecked
-    $IPUConfig.DynamicUpdate  = [bool]$ChkDynamicUpdate.IsChecked
+        $IPUConfig.OSName = $selectedOS
+        $IPUConfig.Silent = [bool]$ChkSilent.IsChecked
+        $IPUConfig.NoReboot = [bool]$ChkNoReboot.IsChecked
+        $IPUConfig.SkipDriverPack = [bool]$ChkSkipDriverPack.IsChecked
+        $IPUConfig.DownloadOnly = [bool]$ChkDownloadOnly.IsChecked
+        $IPUConfig.DynamicUpdate = [bool]$ChkDynamicUpdate.IsChecked
 
-    # Disable button to prevent double-click
-    $BtnStartUpgrade.IsEnabled = $False
-    $BtnStartUpgrade.Content   = 'Starting...'
+        # Disable button to prevent double-click
+        $BtnStartUpgrade.IsEnabled = $False
+        $BtnStartUpgrade.Content = 'Starting...'
 
-    # Hide overlay and show log
-    $ConfigOverlay.Visibility = 'Collapsed'
+        # Hide overlay and show log
+        $ConfigOverlay.Visibility = 'Collapsed'
 
-    # Log chosen config
-    Set-Status 'Upgrading' '#E50019' '#E50019'
-    Write-LogDivider "ANS IPU Console  //  $(Get-Date -Format 'yyyy-MM-dd  HH:mm:ss')" '#E50019'
-    Write-LogLine "  Target OS      : $($IPUConfig.OSName)"       '#5B9BD5'
-    Write-LogLine "  Silent         : $($IPUConfig.Silent)    NoReboot: $($IPUConfig.NoReboot)    SkipDriverPack: $($IPUConfig.SkipDriverPack)" '#5B9BD5'
-    Write-LogLine "  DownloadOnly   : $($IPUConfig.DownloadOnly)    DynamicUpdate: $($IPUConfig.DynamicUpdate)" '#5B9BD5'
-    Write-LogLine ''
-
-    If (Get-Module -ListAvailable -Name OSD -ErrorAction SilentlyContinue) {
-        $v = (Get-Module -ListAvailable -Name OSD | Select-Object -First 1).Version
-        Write-LogLine "  OSD Module v$v detected." '#3A9B50'
-    } Else {
-        Write-LogLine '  WARNING: OSD Module not found. Install with: Install-Module OSD' '#C8820A'
-    }
-    Write-LogLine ''
-
-    if ($TestMode) {
-        Write-LogDivider 'TEST MODE — runspace not started' '#C8820A'
-        Write-LogLine '  Use -TestMode to explore the UI without running an actual upgrade.' '#C8820A'
-        Write-LogLine '  All buttons and controls are live.' '#8B8B8B'
+        # Log chosen config
+        Write-LogDivider "ANS IPU Console  //  $(Get-Date -Format 'yyyy-MM-dd  HH:mm:ss')" '#E50019'
+        Write-LogLine "  Target OS      : $($IPUConfig.OSName)"       '#5B9BD5'
+        Write-LogLine "  Silent         : $($IPUConfig.Silent)    NoReboot: $($IPUConfig.NoReboot)    SkipDriverPack: $($IPUConfig.SkipDriverPack)" '#5B9BD5'
+        Write-LogLine "  DownloadOnly   : $($IPUConfig.DownloadOnly)    DynamicUpdate: $($IPUConfig.DynamicUpdate)" '#5B9BD5'
         Write-LogLine ''
-        Set-Status 'Test Mode' '#C8820A' '#C8820A'
-        $BtnCancel.Content = 'Close'
-    } else {
-        Start-IPURunspace -Config $IPUConfig
-    }
-})
+
+        if ($TestMode) {
+            Set-Status 'Test Mode' '#C8820A' '#C8820A'
+            Write-LogDivider 'TEST MODE — module setup and runspace skipped' '#C8820A'
+            Write-LogLine '  Pass -TestMode to explore the UI without running an actual upgrade.' '#C8820A'
+            Write-LogLine '  All buttons and controls are live.' '#8B8B8B'
+            Write-LogLine ''
+            $BtnCancel.Content = 'Close'
+        }
+        else {
+            Set-Status 'Setting up' '#C8820A' '#C8820A'
+            Start-SetupRunspace -Config $IPUConfig
+        }
+    })
 
 # ── Loaded — pre-populate config controls from $IPUConfig defaults
 $Window.Add_Loaded({
-    Set-Status 'Ready' '#555555' '#555555'
+        Set-Status 'Ready' '#555555' '#555555'
 
-    # Select the matching OS in the ComboBox
-    foreach ($item in $CboOSName.Items) {
-        if ($item.Content -eq $IPUConfig.OSName) {
-            $CboOSName.SelectedItem = $item
-            break
+        # Select the matching OS in the ComboBox
+        foreach ($item in $CboOSName.Items) {
+            if ($item.Content -eq $IPUConfig.OSName) {
+                $CboOSName.SelectedItem = $item
+                break
+            }
         }
-    }
 
-    $ChkSilent.IsChecked         = $IPUConfig.Silent
-    $ChkNoReboot.IsChecked       = $IPUConfig.NoReboot
-    $ChkSkipDriverPack.IsChecked = $IPUConfig.SkipDriverPack
-    $ChkDownloadOnly.IsChecked   = $IPUConfig.DownloadOnly
-    $ChkDynamicUpdate.IsChecked  = $IPUConfig.DynamicUpdate
+        $ChkSilent.IsChecked = $IPUConfig.Silent
+        $ChkNoReboot.IsChecked = $IPUConfig.NoReboot
+        $ChkSkipDriverPack.IsChecked = $IPUConfig.SkipDriverPack
+        $ChkDownloadOnly.IsChecked = $IPUConfig.DownloadOnly
+        $ChkDynamicUpdate.IsChecked = $IPUConfig.DynamicUpdate
 
-    if ($TestMode) {
-        $Window.Title = 'ANS IPU Console [TEST MODE]'
-        Set-Status 'Test Mode' '#C8820A' '#C8820A'
-    }
-})
+        if ($TestMode) {
+            $Window.Title = 'ANS IPU Console [TEST MODE]'
+            Set-Status 'Test Mode' '#C8820A' '#C8820A'
+        }
+    })
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  SHOW
@@ -496,7 +607,11 @@ $Window.Add_Loaded({
 [void]$Window.ShowDialog()
 
 $DispatchTimer.Stop()
+If ($script:SetupPipeline) {
+    try { $script:SetupPipeline.Stop() } catch {}
+    try { $script:SetupRunspace.Close() } catch {}
+};
 If ($script:IPUPipeline) {
-    try { $script:IPUPipeline.Stop()    } catch {}
-    try { $script:IPURunspace.Close()   } catch {}
-}
+    try { $script:IPUPipeline.Stop() } catch {}
+    try { $script:IPURunspace.Close() } catch {}
+};
