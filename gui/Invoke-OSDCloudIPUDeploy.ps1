@@ -55,11 +55,15 @@ Function Initialize-Monitor {
         Set-Content -Path $modulePath -Value $moduleContent -Encoding UTF8
         Import-Module $modulePath -Force -Global -WarningAction SilentlyContinue -ErrorAction Stop
 
-        # Find secrets.json on any drive under the OSDCloud config path
-        $secretsFile = Get-PSDrive -PSProvider FileSystem -ErrorAction SilentlyContinue |
-            ForEach-Object { Join-Path $_.Root 'OSDCloud\Config\Scripts\SetupComplete\secrets.json' } |
-            Where-Object   { Test-Path $_ -ErrorAction SilentlyContinue } |
-            Select-Object  -First 1
+        # Locate secrets — check EXE-injected env var first, then standard drive search
+        $secretsFile = if ($env:ANS_IPU_SECRETS -and (Test-Path $env:ANS_IPU_SECRETS -ErrorAction SilentlyContinue)) {
+            $env:ANS_IPU_SECRETS
+        } else {
+            Get-PSDrive -PSProvider FileSystem -ErrorAction SilentlyContinue |
+                ForEach-Object { Join-Path $_.Root 'OSDCloud\Config\Scripts\SetupComplete\secrets.json' } |
+                Where-Object   { Test-Path $_ -ErrorAction SilentlyContinue } |
+                Select-Object  -First 1
+        }
 
         If (-not $secretsFile) { Enqueue 'Monitoring: secrets.json not found - skipping'; Return $false }
 

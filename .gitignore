@@ -4,3 +4,5 @@ secrets.json
 schema.sql
 secrets.example.json
 .claude
+ANSIPUGUI.exe
+Build-ANSIPUGUI-EXE.ps1
