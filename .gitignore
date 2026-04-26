@@ -3,3 +3,4 @@ secrets.json
 *.log
 schema.sql
 secrets.example.json
+.claude
