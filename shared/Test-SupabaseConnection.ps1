@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     Validates Supabase connectivity, INSERT, UPDATE, and RLS immutability.
@@ -39,7 +39,7 @@ function Write-Step ([string]$Label) {
 # ─────────────────────────────────────────────────────────────────────────────
 #  Load secrets
 # ─────────────────────────────────────────────────────────────────────────────
-Write-Host "`nANS IPU — Supabase Connection Test" -ForegroundColor White
+Write-Host "`nANS IPU  -  Supabase Connection Test" -ForegroundColor White
 Write-Host ('─' * 50) -ForegroundColor DarkGray
 Write-Host "Secrets : $SecretsPath"
 
@@ -79,7 +79,7 @@ $commonHeaders = @{
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  TEST 1 — Connectivity / table reachable
+#  TEST 1  -  Connectivity / table reachable
 # ─────────────────────────────────────────────────────────────────────────────
 Write-Step "Test 1: Connectivity"
 try {
@@ -92,12 +92,12 @@ try {
 }
 catch {
     Write-Fail "Could not reach deployments table" $_.Exception.Message
-    Write-Host "`nAborting — fix connectivity before continuing." -ForegroundColor Yellow
+    Write-Host "`nAborting  -  fix connectivity before continuing." -ForegroundColor Yellow
     exit 1
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  TEST 2 — INSERT a test record
+#  TEST 2  -  INSERT a test record
 # ─────────────────────────────────────────────────────────────────────────────
 Write-Step "Test 2: INSERT"
 $testRow = @{
@@ -138,14 +138,14 @@ try {
 }
 catch {
     Write-Fail "INSERT failed" $_.Exception.Message
-    Write-Host "`nAborting — remaining tests require a valid row id." -ForegroundColor Yellow
+    Write-Host "`nAborting  -  remaining tests require a valid row id." -ForegroundColor Yellow
     exit 1
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  TEST 3 — UPDATE a Running row (should succeed)
+#  TEST 3  -  UPDATE a Running row (should succeed)
 # ─────────────────────────────────────────────────────────────────────────────
-Write-Step "Test 3: UPDATE (Running row — expect success)"
+Write-Step "Test 3: UPDATE (Running row  -  expect success)"
 try {
     $updated = Update-SupabaseRecord -Connection $conn -Id $insertedId -Updates @{
         status           = 'Complete'
@@ -164,12 +164,12 @@ catch {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  TEST 4 — UPDATE a Completed row (RLS should block, 0 rows affected)
+#  TEST 4  -  UPDATE a Completed row (RLS should block, 0 rows affected)
 #  Note: Use Invoke-RestMethod directly so we get the raw array back.
 #  Update-SupabaseRecord normalises an empty array to $null, which makes
-#  @($null).Count == 1 — a false failure.
+#  @($null).Count == 1  -  a false failure.
 # ─────────────────────────────────────────────────────────────────────────────
-Write-Step "Test 4: UPDATE (Completed row — expect RLS block)"
+Write-Step "Test 4: UPDATE (Completed row  -  expect RLS block)"
 try {
     $patchHeaders = $commonHeaders.Clone()
     $patchHeaders['Prefer'] = 'return=representation'
@@ -185,19 +185,19 @@ try {
     # PostgREST returns [] when RLS filters out all candidate rows
     $rowsAffected = @($rawResponse).Count
     if ($rowsAffected -eq 0) {
-        Write-Pass "Completed row is immutable — RLS blocked the update (0 rows affected)"
+        Write-Pass "Completed row is immutable  -  RLS blocked the update (0 rows affected)"
     }
     else {
-        Write-Fail "RLS did not block update of Completed row" "Row was modified — check anon_update policy USING clause"
+        Write-Fail "RLS did not block update of Completed row" "Row was modified  -  check anon_update policy USING clause"
     }
 }
 catch {
     # PostgREST may return 406 when Prefer:return=representation matches zero rows
-    Write-Pass "Completed row is immutable — request rejected ($($_.Exception.Message))"
+    Write-Pass "Completed row is immutable  -  request rejected ($($_.Exception.Message))"
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  TEST 5 — SELECT and verify final state
+#  TEST 5  -  SELECT and verify final state
 # ─────────────────────────────────────────────────────────────────────────────
 Write-Step "Test 5: SELECT and verify final state"
 try {

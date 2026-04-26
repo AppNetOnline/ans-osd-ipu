@@ -2,6 +2,8 @@
 
 A WPF GUI for orchestrating Windows in-place upgrades (IPU) across managed devices, built on [OSDCloud](https://www.osdcloud.com/). Includes optional deployment telemetry via Supabase and a repair utility for failed upgrades.
 
+![Config panel](images/launch.png)
+
 ---
 
 ## Features
@@ -239,6 +241,8 @@ Query them with the anon key from any HTTP client or Supabase dashboard.
 # Test UI changes without running an actual upgrade or needing admin
 .\Launch-ANSIPUGUI-TestMode.bat
 ```
+
+![Test mode log view](images/test-mode.png)
 
 In TestMode, the XAML and deploy script are loaded from the local `gui/` folder instead of GitHub. The upgrade runspace is never started.
 

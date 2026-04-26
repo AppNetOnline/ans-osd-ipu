@@ -1,7 +1,7 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-    ANS IPU Console — launcher
+    ANS IPU Console  -  launcher
 .DESCRIPTION
     Opens the WPF config panel so the operator can choose the target OS and
     options before starting.  Runs Invoke-OSDCloudIPU in a background runspace.
@@ -11,11 +11,11 @@
     Load the XAML from the local file instead of GitHub and skip the runspace.
     Use this to test the UI without an OSD module or admin elevation.
 .NOTES
-    Author  : Appalachian Network Services — appnetonline.com
+    Author  : Appalachian Network Services  -  appnetonline.com
     Requires: OSD module, .NET Framework 4.8+, Admin elevation (not needed with -TestMode)
     Companion files (GitHub):
-        OSDCloudIPUGUI.xaml          — window layout
-        Invoke-OSDCloudIPUDeploy.ps1 — runspace upgrade logic
+        OSDCloudIPUGUI.xaml           -  window layout
+        Invoke-OSDCloudIPUDeploy.ps1  -  runspace upgrade logic
 #>
 param(
     [switch]$TestMode
@@ -25,11 +25,11 @@ Set-StrictMode -Off
 $ErrorActionPreference = 'SilentlyContinue'
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  UPGRADE CONFIGURATION — these are the defaults shown in the config panel.
+#  UPGRADE CONFIGURATION  -  these are the defaults shown in the config panel.
 #  The operator can change them in the UI before clicking Start Upgrade.
 # ─────────────────────────────────────────────────────────────────────────────
 $IPUConfig = @{
-    # Target OS — passed directly to Invoke-OSDCloudIPU -OSName
+    # Target OS  -  passed directly to Invoke-OSDCloudIPU -OSName
     # Valid: 'Windows 11 25H2 x64' | 'Windows 11 25H2 ARM64' | 'Windows 11 24H2 x64'
     #        'Windows 11 24H2 ARM64' | 'Windows 11 23H2 x64' | 'Windows 11 23H2 ARM64'
     #        'Windows 11 22H2 x64'   | 'Windows 11 21H2 x64'
@@ -39,7 +39,7 @@ $IPUConfig = @{
     # Suppress all Windows Setup UI (recommended for unattended runs)
     Silent         = $True
 
-    # Pass /noreboot — Setup completes down-level phase but does not restart
+    # Pass /noreboot  -  Setup completes down-level phase but does not restart
     NoReboot       = $False
 
     # Skip driver pack download and integration
@@ -53,7 +53,7 @@ $IPUConfig = @{
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  GITHUB — base URLs for companion files
+#  GITHUB  -  base URLs for companion files
 # ─────────────────────────────────────────────────────────────────────────────
 $GithubBase = 'https://raw.githubusercontent.com/AppNetOnline/ans-osd-ipu/main'
 $GithubRaw = "$GithubBase/gui"
@@ -67,7 +67,7 @@ Add-Type -AssemblyName WindowsBase
 Add-Type -AssemblyName System.Windows.Forms
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  BOOTSTRAP — fetch (or load locally in TestMode) XAML and runspace script
+#  BOOTSTRAP  -  fetch (or load locally in TestMode) XAML and runspace script
 # ─────────────────────────────────────────────────────────────────────────────
 if ($TestMode) {
     $localXaml = Join-Path $PSScriptRoot 'OSDCloudIPUGUI.xaml'
@@ -150,7 +150,7 @@ $Window.Height = [Math]::Round($workArea.Height * 0.75)
 $Window.Left = $workArea.Left + [Math]::Round(($workArea.Width - $Window.Width) / 2)
 $Window.Top = $workArea.Top + [Math]::Round(($workArea.Height - $Window.Height) / 2)
 
-# Fix RichTextBox PageWidth — prevents single-character-per-line rendering in .NET Framework
+# Fix RichTextBox PageWidth  -  prevents single-character-per-line rendering in .NET Framework
 $RtbLog.Document.PageWidth = 2000
 $RtbLog.Document.LineHeight = [Double]::NaN
 $RtbLog.HorizontalContentAlignment = 'Stretch'
@@ -264,7 +264,7 @@ Function Get-ProgressHint {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  DISPATCHER TIMER — drains message queue onto UI thread every 80 ms
+#  DISPATCHER TIMER  -  drains message queue onto UI thread every 80 ms
 # ─────────────────────────────────────────────────────────────────────────────
 $DispatchTimer = [System.Windows.Threading.DispatcherTimer]::new()
 $DispatchTimer.Interval = [TimeSpan]::FromMilliseconds(80)
@@ -310,10 +310,10 @@ $DispatchTimer.Add_Tick({
                 'warning' { Write-LogLine "[$ts]  $($msg.Text)" '#C8820A' $False }
                 'progress' { Update-Progress $msg.Percent $msg.Label }
                 'modules_ready' {
-                    # Setup runspace finished — close it and launch the upgrade
+                    # Setup runspace finished  -  close it and launch the upgrade
                     try { $script:SetupPipeline.Stop() } catch {}
                     try { $script:SetupRunspace.Close() } catch {}
-                    Write-LogDivider 'Modules verified — starting upgrade' '#3A9B50'
+                    Write-LogDivider 'Modules verified  -  starting upgrade' '#3A9B50'
                     Set-Status 'Upgrading' '#E50019' '#E50019'
                     Start-IPURunspace -Config $script:PendingConfig
                 }
@@ -325,7 +325,7 @@ $DispatchTimer.Add_Tick({
                     $BtnCancel.Content = 'Close'
                 }
                 'complete' {
-                    Write-LogDivider 'Upgrade Phase Complete — machine will restart' '#3A9B50'
+                    Write-LogDivider 'Upgrade Phase Complete  -  machine will restart' '#3A9B50'
                     Update-Progress 100 'Upgrade complete!'
                     Set-Status 'Complete' '#3A9B50' '#3A9B50'
                     $script:IsRunning = $False
@@ -337,7 +337,7 @@ $DispatchTimer.Add_Tick({
 $DispatchTimer.Start()
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  RUNSPACE — upgrade logic runs here; never blocks the UI thread
+#  RUNSPACE  -  upgrade logic runs here; never blocks the UI thread
 # ─────────────────────────────────────────────────────────────────────────────
 Function Start-IPURunspace {
     Param([hashtable]$Config)
@@ -362,7 +362,7 @@ Function Start-IPURunspace {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  SETUP RUNSPACE — checks and installs required modules before upgrade starts
+#  SETUP RUNSPACE  -  checks and installs required modules before upgrade starts
 # ─────────────────────────────────────────────────────────────────────────────
 Function Start-SetupRunspace {
     Param([hashtable]$Config)
@@ -391,7 +391,7 @@ Function Start-SetupRunspace {
             $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
                 [Security.Principal.WindowsBuiltInRole]::Administrator)
             if (-not $isAdmin) {
-                Post '  WARNING: Not running as Administrator — module installation may fail.' 'warning'
+                Post '  WARNING: Not running as Administrator  -  module installation may fail.' 'warning'
                 Post '  Re-launch as Administrator if the OSD module is not already installed.' 'warning'
                 Post ''
             }
@@ -407,13 +407,13 @@ Function Start-SetupRunspace {
                     Post "  NuGet provider : v$($prov.Version)  OK"
                 }
                 else {
-                    Post '  NuGet provider : not found — installing...'
+                    Post '  NuGet provider : not found  -  installing...'
                     $null = Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope AllUsers -ErrorAction Stop
                     Post '  NuGet provider : installed.'
                 }
             }
             catch {
-                Post "  NuGet provider : install failed — $_" 'warning'
+                Post "  NuGet provider : install failed  -  $_" 'warning'
             }
 
             # ── PSGallery trust
@@ -428,7 +428,7 @@ Function Start-SetupRunspace {
                 }
             }
             catch {
-                Post "  PSGallery      : trust check failed — $_" 'warning'
+                Post "  PSGallery      : trust check failed  -  $_" 'warning'
             }
 
             # ── OSD module
@@ -442,7 +442,7 @@ Function Start-SetupRunspace {
                     $MessageQueue.Enqueue(@{ Type = 'modules_ready' })
                 }
                 else {
-                    Post '  OSD module     : not found — installing from PSGallery...'
+                    Post '  OSD module     : not found  -  installing from PSGallery...'
                     Post '  This may take a minute, please wait.' 'warning'
                     Install-Module -Name OSD -Force -AllowClobber -Scope AllUsers -ErrorAction Stop
                     $osd = Get-Module -ListAvailable -Name OSD |
@@ -470,7 +470,7 @@ Function Start-SetupRunspace {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  REPAIR HELPER — finds and launches Start-Repair.ps1 elevated
+#  REPAIR HELPER  -  finds and launches Start-Repair.ps1 elevated
 # ─────────────────────────────────────────────────────────────────────────────
 Function Invoke-Repair {
     $repairScript = Join-Path $PSScriptRoot '..\shared\Start-Repair.ps1'
@@ -507,7 +507,7 @@ Function Invoke-Repair {
 };
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  CLOSE HELPER — optionally confirms when upgrade is running
+#  CLOSE HELPER  -  optionally confirms when upgrade is running
 # ─────────────────────────────────────────────────────────────────────────────
 Function Request-Close {
     if ($script:IsRunning) {
@@ -534,7 +534,7 @@ $BtnRepair.Add_Click({ Invoke-Repair })
 $BtnRepairOverlay.Add_Click({ Invoke-Repair })
 $BtnCancelOverlay.Add_Click({ $Window.Close() })
 
-# ── Start Upgrade — reads controls, collapses overlay, launches runspace
+# ── Start Upgrade  -  reads controls, collapses overlay, launches runspace
 $BtnStartUpgrade.Add_Click({
         # Read selections from UI
         $selectedOS = if ($CboOSName.SelectedItem) {
@@ -565,7 +565,7 @@ $BtnStartUpgrade.Add_Click({
 
         if ($TestMode) {
             Set-Status 'Test Mode' '#C8820A' '#C8820A'
-            Write-LogDivider 'TEST MODE — module setup and runspace skipped' '#C8820A'
+            Write-LogDivider 'TEST MODE  -  module setup and runspace skipped' '#C8820A'
             Write-LogLine '  Pass -TestMode to explore the UI without running an actual upgrade.' '#C8820A'
             Write-LogLine '  All buttons and controls are live.' '#8B8B8B'
             Write-LogLine ''
@@ -577,7 +577,7 @@ $BtnStartUpgrade.Add_Click({
         }
     })
 
-# ── Loaded — pre-populate config controls from $IPUConfig defaults
+# ── Loaded  -  pre-populate config controls from $IPUConfig defaults
 $Window.Add_Loaded({
         Set-Status 'Ready' '#555555' '#555555'
 

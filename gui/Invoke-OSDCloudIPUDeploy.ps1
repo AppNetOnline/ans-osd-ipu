@@ -55,7 +55,7 @@ Function Initialize-Monitor {
         Set-Content -Path $modulePath -Value $moduleContent -Encoding UTF8
         Import-Module $modulePath -Force -Global -WarningAction SilentlyContinue -ErrorAction Stop
 
-        # Locate secrets — check EXE-injected env var first, then standard drive search
+        # Locate secrets  -  check EXE-injected env var first, then standard drive search
         $secretsFile = if ($env:ANS_IPU_SECRETS -and (Test-Path $env:ANS_IPU_SECRETS -ErrorAction SilentlyContinue)) {
             $env:ANS_IPU_SECRETS
         } else {

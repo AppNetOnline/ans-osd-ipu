@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Supabase REST API helpers for ANS IPU deployment tracking.
 .DESCRIPTION
@@ -11,7 +11,7 @@
       "SupabaseKey" : "<anon-key>"
     }
 
-    Use the anon (publishable) key — NOT the service-role key.
+    Use the anon (publishable) key  -  NOT the service-role key.
     RLS policies in schema.sql restrict anon to INSERT + UPDATE(Running) + SELECT.
     Store secrets.json at:
       C:\OSDCloud\Config\Scripts\SetupComplete\secrets.json
@@ -21,7 +21,7 @@ Set-StrictMode -Off
 $ErrorActionPreference = 'Stop'
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  PRIVATE — shared REST caller
+#  PRIVATE  -  shared REST caller
 # ─────────────────────────────────────────────────────────────────────────────
 Function Invoke-SupabaseRest {
     Param(
@@ -37,12 +37,12 @@ Function Invoke-SupabaseRest {
         'apikey'        = $ApiKey
         'Authorization' = "Bearer $ApiKey"
         'Content-Type'  = 'application/json'
-    }
+    };
 
     # Ask Supabase to return the affected row(s) on write operations
-    if ($Method -in 'POST', 'PATCH') {
+    If ($Method -in 'POST', 'PATCH') {
         $headers['Prefer'] = 'return=representation'
-    }
+    };
 
     $uri = "$BaseUrl/rest/v1/$Table"
     if ($Filter) { $uri += "?$Filter" }
@@ -53,17 +53,17 @@ Function Invoke-SupabaseRest {
         Headers         = $headers
         UseBasicParsing = $True
         ErrorAction     = 'Stop'
-    }
+    };
 
-    if ($null -ne $Body) {
+    If ($null -ne $Body) {
         $invokeParams['Body'] = ($Body | ConvertTo-Json -Depth 10 -Compress)
-    }
+    };
 
-    return Invoke-RestMethod @invokeParams
+    Return Invoke-RestMethod @invokeParams
 };
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  PUBLIC — Insert a new deployment row
+#  PUBLIC  -  Insert a new deployment row
 # ─────────────────────────────────────────────────────────────────────────────
 Function New-SupabaseRecord {
     [CmdletBinding()]
@@ -80,12 +80,12 @@ Function New-SupabaseRecord {
         -Body    $Row
 
     # PostgREST returns an array; return the first element
-    if ($result -is [array]) { return $result[0] }
-    return $result
+    If ($result -is [array]) { return $result[0] }
+    Return $result
 };
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  PUBLIC — Patch an existing row by id
+#  PUBLIC  -  Patch an existing row by id
 # ─────────────────────────────────────────────────────────────────────────────
 Function Update-SupabaseRecord {
     [CmdletBinding()]
@@ -103,8 +103,8 @@ Function Update-SupabaseRecord {
         -Filter  "id=eq.$Id" `
         -Body    $Updates
 
-    if ($result -is [array]) { return $result[0] }
-    return $result
+    If ($result -is [array]) { return $result[0] }
+    Return $result
 };
 
 Export-ModuleMember -Function New-SupabaseRecord, Update-SupabaseRecord
