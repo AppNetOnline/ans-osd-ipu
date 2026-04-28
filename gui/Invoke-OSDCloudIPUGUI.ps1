@@ -34,7 +34,7 @@ $IPUConfig = @{
     #        'Windows 11 24H2 ARM64' | 'Windows 11 23H2 x64' | 'Windows 11 23H2 ARM64'
     #        'Windows 11 22H2 x64'   | 'Windows 11 21H2 x64'
     #        'Windows 10 22H2 x64'   | 'Windows 10 22H2 ARM64'
-    OSName         = 'Windows 11 25H2 x64'
+    OSName         = 'Windows 11 24H2 x64'
 
     # Suppress all Windows Setup UI (recommended for unattended runs)
     Silent         = $True
@@ -55,7 +55,7 @@ $IPUConfig = @{
 # ─────────────────────────────────────────────────────────────────────────────
 #  GITHUB  -  base URLs for companion files
 # ─────────────────────────────────────────────────────────────────────────────
-$GithubBase = 'https://raw.githubusercontent.com/AppNetOnline/ans-osd-ipu/main'
+$GithubBase = 'https://raw.githubusercontent.com/AppNetOnline/ans-osd-ipu/master'
 $GithubRaw = "$GithubBase/gui"
 
 # ─────────────────────────────────────────────────────────────────────────────

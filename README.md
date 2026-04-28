@@ -38,7 +38,7 @@ A WPF GUI for orchestrating Windows in-place upgrades (IPU) across managed devic
 Paste into any elevated PowerShell window:
 
 ```powershell
-irm https://raw.githubusercontent.com/AppNetOnline/ans-osd-ipu/main/Start-ANSIPUGUI.ps1 | iex
+irm https://raw.githubusercontent.com/AppNetOnline/ans-osd-ipu/master/gui/Start-ANSIPUGUI.ps1 | iex
 ```
 
 Or double-click `Start-ANSIPUGUI.bat` — same thing, no PowerShell window required.
